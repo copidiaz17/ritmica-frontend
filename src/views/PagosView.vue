@@ -27,6 +27,9 @@
           <option v-for="a in anios" :key="a" :value="a">{{ a }}</option>
         </select>
         <button @click="cargarCuotas" class="btn-primary">Filtrar</button>
+        <button @click="exportarPDF" :disabled="exportando || !cuotas.length" class="btn-secondary flex items-center gap-2 text-sm">
+          <span>📄</span> {{ exportando ? 'Generando...' : 'Exportar PDF' }}
+        </button>
       </div>
 
       <div class="card overflow-hidden">
@@ -154,8 +157,19 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { exportarCuotasPDF } from '../utils/pdf.js'
 
-const esProfe = localStorage.getItem('ritmica_rol') === 'profesora'
+const esProfe   = localStorage.getItem('ritmica_rol') === 'profesora'
+const exportando = ref(false)
+
+async function exportarPDF() {
+  exportando.value = true
+  try {
+    await exportarCuotasPDF({ cuotas: cuotas.value, mes: filtroMes.value, anio: filtroAnio.value })
+  } finally {
+    exportando.value = false
+  }
+}
 
 const tabs = [
   { id: 'listado',  label: 'Listado de pagos' },

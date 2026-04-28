@@ -7,9 +7,14 @@
         <h1 class="font-display text-3xl font-bold text-ritmica-dark">Alumnas</h1>
         <p class="font-body text-gray-500 mt-1">{{ alumnas.length }} {{ esProfe ? 'en tus grupos' : 'registradas' }}</p>
       </div>
-      <button @click="abrirModal()" class="btn-primary flex items-center gap-2">
-        <span>+</span> Nueva alumna
-      </button>
+      <div class="flex gap-2">
+        <button @click="exportarPDF" :disabled="exportando" class="btn-secondary flex items-center gap-2 text-sm">
+          <span>📄</span> {{ exportando ? 'Generando...' : 'Exportar PDF' }}
+        </button>
+        <button @click="abrirModal()" class="btn-primary flex items-center gap-2">
+          <span>+</span> Nueva alumna
+        </button>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -295,6 +300,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { exportarAlumnasPDF } from '../utils/pdf.js'
 
 const rol    = localStorage.getItem('ritmica_rol') || ''
 const esProfe = rol === 'profesora'
@@ -313,6 +319,20 @@ const guardandoPago  = ref(false)
 const errorModal     = ref('')
 const errorPago      = ref('')
 const alumnaSeleccionada = ref(null)
+const exportando = ref(false)
+
+async function exportarPDF() {
+  exportando.value = true
+  try {
+    await exportarAlumnasPDF({
+      alumnas: alumnasFiltradas.value,
+      cuotasPagadas: cuotasPagadas.value,
+      filtroEstado: filtroEstado.value,
+    })
+  } finally {
+    exportando.value = false
+  }
+}
 
 const MESES_N = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 function nombreMes(m) { return MESES_N[m - 1] }
