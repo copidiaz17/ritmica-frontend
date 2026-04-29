@@ -23,6 +23,7 @@
     </div>
 
     <div v-if="cargando" class="text-center py-16 text-gray-400 font-body">Calculando...</div>
+    <div v-if="errorMsg" class="card p-4 text-red-500 font-body text-sm mb-4">{{ errorMsg }}</div>
 
     <template v-else-if="datos">
       <!-- Resumen total -->
@@ -131,6 +132,7 @@ const anios      = Array.from({ length: 4 }, (_, i) => hoy.getFullYear() - i)
 const cargando   = ref(false)
 const datos      = ref(null)
 const expandido  = ref(null)
+const errorMsg   = ref('')
 
 const MESES_N = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 function nombreMes(m) { return MESES_N[m - 1] }
@@ -146,6 +148,7 @@ function toggle(id) {
 
 async function cargar() {
   cargando.value = true
+  errorMsg.value = ''
   expandido.value = null
   try {
     const { data } = await axios.get('/api/sueldos', {
@@ -153,6 +156,8 @@ async function cargar() {
       headers: headers(),
     })
     datos.value = data
+  } catch (err) {
+    errorMsg.value = err.response?.data?.error || 'Error al cargar los sueldos'
   } finally {
     cargando.value = false
   }
