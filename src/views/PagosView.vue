@@ -19,19 +19,87 @@
 
     <!-- Tab: Listado de pagos -->
     <template v-if="tabActivo === 'listado'">
-      <div class="flex flex-wrap gap-3 mb-4">
-        <select v-model.number="filtroMes" class="input w-36">
-          <option v-for="m in 12" :key="m" :value="m">{{ nombreMes(m) }}</option>
-        </select>
-        <select v-model.number="filtroAnio" class="input w-28">
-          <option v-for="a in anios" :key="a" :value="a">{{ a }}</option>
-        </select>
-        <button @click="cargarCuotas" class="btn-primary">Filtrar</button>
-        <button @click="exportarPDF" :disabled="exportando || !cuotas.length" class="btn-secondary flex items-center gap-2 text-sm">
-          <span>📄</span> {{ exportando ? 'Generando...' : 'Exportar PDF' }}
-        </button>
+
+      <!-- Panel de filtros -->
+      <div class="card mb-4 p-4">
+        <p class="font-body text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Filtros</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+          <!-- Modo fecha -->
+          <div class="sm:col-span-2 lg:col-span-3">
+            <div class="flex gap-4 items-center mb-3">
+              <label class="flex items-center gap-2 font-body text-sm text-gray-600 cursor-pointer">
+                <input type="radio" v-model="modoFecha" value="periodo" class="accent-ritmica-pink" />
+                Por período (mes/año)
+              </label>
+              <label class="flex items-center gap-2 font-body text-sm text-gray-600 cursor-pointer">
+                <input type="radio" v-model="modoFecha" value="rango" class="accent-ritmica-pink" />
+                Por rango de fechas
+              </label>
+            </div>
+          </div>
+
+          <!-- Período -->
+          <template v-if="modoFecha === 'periodo'">
+            <div>
+              <label class="block font-body text-xs text-gray-500 mb-1">Mes</label>
+              <select v-model.number="filtroMes" class="input">
+                <option :value="null">Todos los meses</option>
+                <option v-for="m in 12" :key="m" :value="m">{{ nombreMes(m) }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-body text-xs text-gray-500 mb-1">Año</label>
+              <select v-model.number="filtroAnio" class="input">
+                <option :value="null">Todos los años</option>
+                <option v-for="a in anios" :key="a" :value="a">{{ a }}</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Rango de fechas -->
+          <template v-else>
+            <div>
+              <label class="block font-body text-xs text-gray-500 mb-1">Desde</label>
+              <input type="date" v-model="filtroDesde" class="input" />
+            </div>
+            <div>
+              <label class="block font-body text-xs text-gray-500 mb-1">Hasta</label>
+              <input type="date" v-model="filtroHasta" class="input" />
+            </div>
+          </template>
+
+          <!-- Grupo -->
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Grupo</label>
+            <select v-model="filtroActividad" class="input">
+              <option value="">Todos los grupos</option>
+              <option v-for="act in actividades" :key="act.id" :value="act.id">{{ act.nombre }}</option>
+            </select>
+          </div>
+
+          <!-- Profesora (solo admin/recepcion) -->
+          <div v-if="!esProfe">
+            <label class="block font-body text-xs text-gray-500 mb-1">Profesora</label>
+            <select v-model="filtroProfe" class="input">
+              <option value="">Todas las profesoras</option>
+              <option v-for="p in profesoras" :key="p.id" :value="p.id">{{ p.apellido }}, {{ p.nombre }}</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+          <button @click="cargarCuotas" class="btn-primary">Filtrar</button>
+          <button @click="limpiarFiltros" class="btn-secondary">Limpiar</button>
+          <button @click="exportarPDF" :disabled="exportando || !cuotas.length" class="btn-secondary flex items-center gap-2 text-sm ml-auto">
+            <span>📄</span> {{ exportando ? 'Generando...' : 'Exportar PDF' }}
+          </button>
+        </div>
       </div>
 
+      <!-- Tabla -->
       <div class="card overflow-hidden">
         <div v-if="cargando" class="text-center py-12 text-gray-400 font-body">Cargando...</div>
         <div v-else-if="!cuotas.length" class="text-center py-12 text-gray-400 font-body">No hay pagos para el período seleccionado.</div>
@@ -42,7 +110,7 @@
               <th class="text-center px-6 py-4 font-body text-xs text-gray-400 uppercase tracking-wider">Período</th>
               <th class="text-right px-6 py-4 font-body text-xs text-gray-400 uppercase tracking-wider">Monto</th>
               <th class="text-center px-6 py-4 font-body text-xs text-gray-400 uppercase tracking-wider hidden md:table-cell">Medio</th>
-              <th class="text-center px-6 py-4 font-body text-xs text-gray-400 uppercase tracking-wider hidden md:table-cell">Fecha</th>
+              <th class="text-center px-6 py-4 font-body text-xs text-gray-400 uppercase tracking-wider hidden md:table-cell">Fecha pago</th>
               <th class="text-center px-6 py-4 font-body text-xs text-gray-400 uppercase tracking-wider">Acción</th>
             </tr>
           </thead>
@@ -62,7 +130,7 @@
           </tbody>
           <tfoot>
             <tr class="bg-gray-50">
-              <td colspan="2" class="px-6 py-3 font-body text-sm font-bold text-gray-700">Total</td>
+              <td colspan="2" class="px-6 py-3 font-body text-sm font-bold text-gray-700">Total ({{ cuotas.length }} registros)</td>
               <td class="px-6 py-3 font-body text-sm font-bold text-ritmica-pink text-right font-mono">${{ fmt(totalMes) }}</td>
               <td colspan="3"></td>
             </tr>
@@ -185,10 +253,20 @@ const guardandoPago = ref(false)
 const errorPago  = ref('')
 const alumnaSeleccionada = ref(null)
 
-const hoy = new Date()
-const filtroMes  = ref(hoy.getMonth() + 1)
-const filtroAnio = ref(hoy.getFullYear())
-const anios = Array.from({ length: 3 }, (_, i) => hoy.getFullYear() - i)
+// Datos para dropdowns
+const actividades = ref([])
+const profesoras  = ref([])
+
+// Filtros
+const modoFecha     = ref('periodo')
+const hoy           = new Date()
+const filtroMes     = ref(hoy.getMonth() + 1)
+const filtroAnio    = ref(hoy.getFullYear())
+const filtroDesde   = ref('')
+const filtroHasta   = ref('')
+const filtroActividad = ref('')
+const filtroProfe   = ref('')
+const anios = Array.from({ length: 5 }, (_, i) => hoy.getFullYear() - i)
 
 const formPago = ref({ mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10) })
 
@@ -199,11 +277,47 @@ function headers() { return { Authorization: `Bearer ${localStorage.getItem('rit
 
 const totalMes = computed(() => cuotas.value.reduce((s,c) => s + Number(c.monto), 0))
 
+function limpiarFiltros() {
+  modoFecha.value    = 'periodo'
+  filtroMes.value    = hoy.getMonth() + 1
+  filtroAnio.value   = hoy.getFullYear()
+  filtroDesde.value  = ''
+  filtroHasta.value  = ''
+  filtroActividad.value = ''
+  filtroProfe.value  = ''
+  cargarCuotas()
+}
+
 async function cargarCuotas() {
   cargando.value = true
-  const { data } = await axios.get('/api/cuotas', { params: { mes: filtroMes.value, anio: filtroAnio.value }, headers: headers() })
-  cuotas.value = data
-  cargando.value = false
+  try {
+    const params = {}
+    if (modoFecha.value === 'rango') {
+      if (filtroDesde.value) params.fecha_desde = filtroDesde.value
+      if (filtroHasta.value) params.fecha_hasta = filtroHasta.value
+    } else {
+      if (filtroMes.value)  params.mes  = filtroMes.value
+      if (filtroAnio.value) params.anio = filtroAnio.value
+    }
+    if (filtroActividad.value) params.actividad_id = filtroActividad.value
+    if (filtroProfe.value && !esProfe) params.profesora_id = filtroProfe.value
+
+    const { data } = await axios.get('/api/cuotas', { params, headers: headers() })
+    cuotas.value = data
+  } finally {
+    cargando.value = false
+  }
+}
+
+async function cargarActividades() {
+  const { data } = await axios.get('/api/actividades', { headers: headers() })
+  actividades.value = data.sort((a,b) => a.nombre.localeCompare(b.nombre))
+}
+
+async function cargarProfesoras() {
+  if (esProfe) return
+  const { data } = await axios.get('/api/profesoras', { headers: headers() })
+  profesoras.value = data
 }
 
 async function cargarVencidas() {
@@ -241,5 +355,10 @@ async function confirmarPago() {
   }
 }
 
-onMounted(() => { cargarCuotas(); cargarVencidas() })
+onMounted(() => {
+  cargarCuotas()
+  cargarVencidas()
+  cargarActividades()
+  cargarProfesoras()
+})
 </script>
