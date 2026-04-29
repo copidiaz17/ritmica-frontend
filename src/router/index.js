@@ -32,6 +32,7 @@ const router = createRouter({
         { path: 'sedes',       name: 'sedes',       component: () => import('../views/SedesView.vue') },
         { path: 'actividades', name: 'actividades', component: () => import('../views/ActividadesView.vue') },
         { path: 'usuarios',    name: 'usuarios',    component: () => import('../views/UsuariosView.vue') },
+        { path: 'sueldos',     name: 'sueldos',     component: () => import('../views/SueldosView.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },

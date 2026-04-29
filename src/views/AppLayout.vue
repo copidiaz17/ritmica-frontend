@@ -96,6 +96,7 @@ const ALL_LINKS = [
   { to: '/actividades', icon: '🗓️', label: 'Actividades',  roles: ['admin','recepcion','lectura'] },
   { to: '/profesoras',  icon: '👩‍🏫', label: 'Profesoras',  roles: ['admin','recepcion','lectura'] },
   { to: '/sedes',       icon: '📍', label: 'Sedes',        roles: ['admin'] },
+  { to: '/sueldos',     icon: '💰', label: 'Sueldos',      roles: ['admin'] },
   { to: '/usuarios',    icon: '👤', label: 'Usuarios',     roles: ['admin'] },
 ]
 
