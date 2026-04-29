@@ -119,7 +119,10 @@
               <td class="px-6 py-3 font-body text-sm font-semibold text-gray-900">
                 {{ c.alumna?.apellido }}, {{ c.alumna?.nombre }}
               </td>
-              <td class="px-6 py-3 font-body text-sm text-gray-500 text-center">{{ nombreMes(c.mes) }} {{ c.anio }}</td>
+              <td class="px-6 py-3 font-body text-sm text-gray-500 text-center">
+                <span v-if="c.tipo === 'inscripcion'" class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Inscripción {{ c.anio }}</span>
+                <span v-else>{{ nombreMes(c.mes) }} {{ c.anio }}</span>
+              </td>
               <td class="px-6 py-3 font-body text-sm font-semibold text-gray-900 text-right font-mono">${{ fmt(c.monto) }}</td>
               <td class="px-6 py-3 font-body text-xs text-gray-500 text-center hidden md:table-cell capitalize">{{ c.medio_pago }}</td>
               <td class="px-6 py-3 font-body text-xs text-gray-500 text-center hidden md:table-cell">{{ c.fecha_pago }}</td>
@@ -180,6 +183,18 @@
         </div>
         <p class="font-body text-sm text-gray-500 mb-4 font-semibold">{{ alumnaSeleccionada?.apellido }}, {{ alumnaSeleccionada?.nombre }}</p>
         <div class="space-y-4">
+          <!-- Tipo -->
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Tipo de pago</label>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 font-body text-sm cursor-pointer">
+                <input type="radio" v-model="formPago.tipo" value="cuota" class="accent-ritmica-pink" /> Cuota mensual
+              </label>
+              <label class="flex items-center gap-2 font-body text-sm cursor-pointer">
+                <input type="radio" v-model="formPago.tipo" value="inscripcion" class="accent-ritmica-pink" /> Inscripción
+              </label>
+            </div>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-body text-xs text-gray-500 mb-1">Mes</label>
@@ -208,6 +223,10 @@
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Fecha de pago</label>
             <input v-model="formPago.fecha_pago" type="date" class="input" />
+          </div>
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Observación</label>
+            <input v-model="formPago.observacion" type="text" class="input" placeholder="Opcional..." />
           </div>
         </div>
         <p v-if="errorPago" class="text-red-500 text-sm mt-3 font-body">{{ errorPago }}</p>
@@ -268,7 +287,7 @@ const filtroActividad = ref('')
 const filtroProfe   = ref('')
 const anios = Array.from({ length: 5 }, (_, i) => hoy.getFullYear() - i)
 
-const formPago = ref({ mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10) })
+const formPago = ref({ tipo: 'cuota', mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10), observacion: '' })
 
 const MESES_N = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 function nombreMes(m) { return MESES_N[m-1] }
@@ -336,7 +355,7 @@ async function eliminar(c) {
 function pagarDesdeVencida(a) {
   alumnaSeleccionada.value = a
   errorPago.value = ''
-  formPago.value = { mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10) }
+  formPago.value = { tipo: 'cuota', mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10), observacion: '' }
   modalPago.value = true
 }
 

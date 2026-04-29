@@ -131,6 +131,10 @@
               <label class="block font-body text-xs text-gray-500 mb-1">Apellido *</label>
               <input v-model="form.apellido" type="text" class="input" />
             </div>
+            <div class="col-span-2">
+              <label class="block font-body text-xs text-gray-500 mb-1">Dirección</label>
+              <input v-model="form.direccion" type="text" class="input" placeholder="Calle, número, barrio..." />
+            </div>
             <div>
               <label class="block font-body text-xs text-gray-500 mb-1">Apodo</label>
               <input v-model="form.apodo" type="text" class="input" />
@@ -254,6 +258,18 @@
         </div>
 
         <div class="space-y-4">
+          <!-- Tipo -->
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Tipo de pago</label>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 font-body text-sm cursor-pointer">
+                <input type="radio" v-model="formPago.tipo" value="cuota" class="accent-ritmica-pink" /> Cuota mensual
+              </label>
+              <label class="flex items-center gap-2 font-body text-sm cursor-pointer">
+                <input type="radio" v-model="formPago.tipo" value="inscripcion" class="accent-ritmica-pink" /> Inscripción
+              </label>
+            </div>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-body text-xs text-gray-500 mb-1">Mes</label>
@@ -282,6 +298,10 @@
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Fecha de pago</label>
             <input v-model="formPago.fecha_pago" type="date" class="input" />
+          </div>
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Observación</label>
+            <input v-model="formPago.observacion" type="text" class="input" placeholder="Opcional..." />
           </div>
         </div>
         <p v-if="errorPago" class="text-red-500 text-sm font-body mt-3">{{ errorPago }}</p>
@@ -340,7 +360,7 @@ function nombreMes(m) { return MESES_N[m - 1] }
 const hoy = new Date()
 
 const formBase = () => ({
-  nombre: '', apellido: '', apodo: '', estado: 'activa',
+  nombre: '', apellido: '', apodo: '', estado: 'activa', direccion: '',
   fecha_nacimiento: '', documento: '', telefono: '', telefono_fijo: '',
   correo: '', fecha_ingreso: '', contacto_emergencia: '', telefono_emergencia: '',
   obra_social: '', vencimiento_certificado: '', canal_captacion: 'otros',
@@ -348,7 +368,7 @@ const formBase = () => ({
 })
 
 const form     = ref(formBase())
-const formPago = ref({ mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10) })
+const formPago = ref({ tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' })
 
 function headers()    { return { Authorization: `Bearer ${localStorage.getItem('ritmica_token')}` } }
 function iniciales(a) { return `${a.nombre[0]}${a.apellido[0]}`.toUpperCase() }
@@ -396,7 +416,8 @@ function abrirModal(a = null) {
   errorModal.value = ''
   form.value = a ? {
     nombre: a.nombre, apellido: a.apellido, apodo: a.apodo || '',
-    estado: a.estado, fecha_nacimiento: a.fecha_nacimiento || '',
+    estado: a.estado, direccion: a.direccion || '',
+    fecha_nacimiento: a.fecha_nacimiento || '',
     documento: a.documento || '', telefono: a.telefono || '',
     telefono_fijo: a.telefono_fijo || '', correo: a.correo || '',
     fecha_ingreso: a.fecha_ingreso || '',
@@ -438,7 +459,7 @@ async function guardar() {
 function registrarPago(a) {
   alumnaSeleccionada.value = a
   errorPago.value = ''
-  formPago.value = { mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10) }
+  formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' }
   modalPago.value = true
 }
 
