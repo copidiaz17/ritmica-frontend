@@ -92,6 +92,7 @@
                   <RouterLink :to="`/alumnas/${a.id}`" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors text-sm">👁️</RouterLink>
                   <button @click="abrirModal(a)" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors text-sm">✏️</button>
                   <button @click="registrarPago(a)" class="p-2 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition-colors text-sm">💳</button>
+                  <button v-if="esProfe" @click="abrirCambioGrupo(a)" class="p-2 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors text-sm" title="Cambiar grupo">🔀</button>
                 </div>
               </td>
             </tr>
@@ -314,6 +315,34 @@
       </div>
     </div>
 
+    <!-- ─── Modal cambiar grupo (solo profesoras) ────────────────────────────── -->
+    <div v-if="modalCambioGrupo" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-sm p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-display text-lg font-bold text-ritmica-dark">Cambiar grupo</h2>
+          <button @click="modalCambioGrupo = false" class="text-gray-400 hover:text-gray-700 text-xl">✕</button>
+        </div>
+        <p class="font-body text-sm text-gray-600 mb-4">
+          <span class="font-semibold">{{ alumnaParaCambio?.apellido }}, {{ alumnaParaCambio?.nombre }}</span><br/>
+          <span class="text-xs text-gray-400">Grupo actual: {{ alumnaParaCambio?.actividades?.map(a => a.nombre).join(', ') || '—' }}</span>
+        </p>
+        <div>
+          <label class="block font-body text-xs text-gray-500 mb-1">Nuevo grupo</label>
+          <select v-model="grupoDestino" class="input">
+            <option value="">Seleccioná un grupo...</option>
+            <option v-for="act in catalogo" :key="act.id" :value="act.id">{{ act.nombre }}</option>
+          </select>
+        </div>
+        <p v-if="errorCambio" class="text-red-500 text-sm font-body mt-3">{{ errorCambio }}</p>
+        <div class="flex gap-3 mt-5">
+          <button @click="modalCambioGrupo = false" class="btn-secondary flex-1">Cancelar</button>
+          <button @click="confirmarCambioGrupo" :disabled="!grupoDestino || guardandoCambio" class="btn-primary flex-1">
+            {{ guardandoCambio ? 'Guardando...' : 'Confirmar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -339,7 +368,12 @@ const guardandoPago  = ref(false)
 const errorModal     = ref('')
 const errorPago      = ref('')
 const alumnaSeleccionada = ref(null)
-const exportando = ref(false)
+const exportando       = ref(false)
+const modalCambioGrupo = ref(false)
+const alumnaParaCambio = ref(null)
+const grupoDestino     = ref('')
+const errorCambio      = ref('')
+const guardandoCambio  = ref(false)
 
 async function exportarPDF() {
   exportando.value = true
@@ -475,6 +509,31 @@ async function confirmarPago() {
     errorPago.value = err.response?.data?.error || 'Error al guardar'
   } finally {
     guardandoPago.value = false
+  }
+}
+
+function abrirCambioGrupo(a) {
+  alumnaParaCambio.value = a
+  grupoDestino.value = ''
+  errorCambio.value = ''
+  modalCambioGrupo.value = true
+}
+
+async function confirmarCambioGrupo() {
+  errorCambio.value = ''
+  guardandoCambio.value = true
+  try {
+    await axios.put(
+      `/api/alumnas/${alumnaParaCambio.value.id}/cambiar-grupo`,
+      { actividad_id_nueva: grupoDestino.value },
+      { headers: headers() }
+    )
+    modalCambioGrupo.value = false
+    await cargar()
+  } catch (err) {
+    errorCambio.value = err.response?.data?.error || 'Error al cambiar grupo'
+  } finally {
+    guardandoCambio.value = false
   }
 }
 
