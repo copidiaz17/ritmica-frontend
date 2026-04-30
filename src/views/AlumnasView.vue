@@ -27,7 +27,7 @@
         <option value="baja">Baja</option>
         <option value="suspendida">Suspendida</option>
       </select>
-      <select v-if="!esProfe" v-model="filtroActividad" @change="cargar" class="input w-52">
+      <select v-if="!esProfe" v-model="filtroActividad" class="input w-52">
         <option value="">Todos los grupos</option>
         <option v-for="act in catalogo" :key="act.id" :value="act.id">{{ act.nombre }}</option>
       </select>
@@ -351,7 +351,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { exportarAlumnasPDF } from '../utils/pdf.js'
 
@@ -543,6 +543,8 @@ async function confirmarCambioGrupo() {
     guardandoCambio.value = false
   }
 }
+
+watch(filtroActividad, cargar)
 
 onMounted(cargar)
 </script>
