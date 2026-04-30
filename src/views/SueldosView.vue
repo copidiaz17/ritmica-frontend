@@ -89,27 +89,31 @@
               <thead>
                 <tr class="bg-gray-50">
                   <th class="text-left px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider">Alumna</th>
-                  <th class="text-center px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider">Tipo</th>
-                  <th class="text-center px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider hidden sm:table-cell">Medio</th>
+                  <th class="text-left px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider hidden lg:table-cell">Grupo</th>
+                  <th class="text-center px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider">%</th>
                   <th class="text-center px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider hidden md:table-cell">Fecha pago</th>
                   <th class="text-right px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider">Monto</th>
+                  <th class="text-right px-6 py-2 font-body text-xs text-gray-400 uppercase tracking-wider">Le corresponde</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="c in p.detalle" :key="c.id" class="border-t border-gray-50 hover:bg-gray-50">
                   <td class="px-6 py-2.5 font-body text-sm text-gray-800">{{ c.alumna.apellido }}, {{ c.alumna.nombre }}</td>
+                  <td class="px-6 py-2.5 font-body text-xs text-gray-500 hidden lg:table-cell">{{ c.grupo }}</td>
                   <td class="px-6 py-2.5 text-center">
-                    <span v-if="c.tipo === 'inscripcion'" class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Inscripción</span>
-                    <span v-else class="text-xs bg-ritmica-pink/10 text-ritmica-pink px-2 py-0.5 rounded-full">Cuota</span>
+                    <span
+                      class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                      :class="c.porcentaje === 0.20 ? 'bg-amber-100 text-amber-700' : 'bg-ritmica-pink/10 text-ritmica-pink'"
+                    >{{ c.porcentaje === 0.20 ? '20%' : '40%' }}</span>
                   </td>
-                  <td class="px-6 py-2.5 font-body text-xs text-gray-500 text-center capitalize hidden sm:table-cell">{{ c.medio_pago }}</td>
                   <td class="px-6 py-2.5 font-body text-xs text-gray-500 text-center hidden md:table-cell">{{ c.fecha_pago }}</td>
-                  <td class="px-6 py-2.5 font-body text-sm font-semibold text-gray-900 text-right font-mono">${{ fmt(c.monto) }}</td>
+                  <td class="px-6 py-2.5 font-body text-sm text-gray-600 text-right font-mono">${{ fmt(c.monto) }}</td>
+                  <td class="px-6 py-2.5 font-body text-sm font-semibold text-emerald-700 text-right font-mono">${{ fmt(Math.round(c.monto * c.porcentaje)) }}</td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr class="bg-emerald-50">
-                  <td colspan="4" class="px-6 py-2.5 font-body text-sm font-semibold text-gray-700">Sueldo a liquidar (40% de ${{ fmt(p.total_cuotas) }})</td>
+                  <td colspan="5" class="px-6 py-2.5 font-body text-sm font-semibold text-gray-700">Sueldo a liquidar</td>
                   <td class="px-6 py-2.5 font-body text-sm font-bold text-emerald-700 text-right font-mono">${{ fmt(p.sueldo) }}</td>
                 </tr>
               </tfoot>
