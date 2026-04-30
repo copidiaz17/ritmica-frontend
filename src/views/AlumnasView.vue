@@ -27,6 +27,10 @@
         <option value="baja">Baja</option>
         <option value="suspendida">Suspendida</option>
       </select>
+      <select v-if="!esProfe" v-model="filtroActividad" @change="cargar" class="input w-52">
+        <option value="">Todos los grupos</option>
+        <option v-for="act in catalogo" :key="act.id" :value="act.id">{{ act.nombre }}</option>
+      </select>
     </div>
 
     <!-- Tabla -->
@@ -92,7 +96,7 @@
                   <RouterLink :to="`/alumnas/${a.id}`" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors text-sm">👁️</RouterLink>
                   <button @click="abrirModal(a)" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors text-sm">✏️</button>
                   <button @click="registrarPago(a)" class="p-2 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition-colors text-sm">💳</button>
-                  <button v-if="esProfe" @click="abrirCambioGrupo(a)" class="p-2 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors text-sm" title="Cambiar grupo">🔀</button>
+                  <button @click="abrirCambioGrupo(a)" class="p-2 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors text-sm" title="Cambiar grupo">🔀</button>
                 </div>
               </td>
             </tr>
@@ -357,9 +361,10 @@ const esProfe = rol === 'profesora'
 const alumnas        = ref([])
 const catalogo       = ref([])   // actividades (filtradas por backend si es profe)
 const cuotasPagadas  = ref([])
-const cargando       = ref(true)
-const busqueda       = ref('')
-const filtroEstado   = ref('')
+const cargando        = ref(true)
+const busqueda        = ref('')
+const filtroEstado    = ref('')
+const filtroActividad = ref('')
 const modal          = ref(false)
 const modalPago      = ref(false)
 const editando       = ref(null)
@@ -431,8 +436,10 @@ const alumnasFiltradas = computed(() => {
 async function cargar() {
   cargando.value = true
   try {
+    const params = {}
+    if (filtroActividad.value) params.actividad_id = filtroActividad.value
     const [al, act, venc] = await Promise.all([
-      axios.get('/api/alumnas',         { headers: headers() }),
+      axios.get('/api/alumnas',         { headers: headers(), params }),
       axios.get('/api/actividades',     { headers: headers() }),
       axios.get('/api/cuotas/vencidas', { headers: headers() }),
     ])
