@@ -10,6 +10,9 @@ function requireAuth(to, from, next) {
     const allowed = PROFESORA_ALLOWED.some(p => to.path.startsWith(p))
     if (!allowed) return next('/alumnas')
   }
+  if (rol === 'recepcion' && to.path.startsWith('/dashboard')) {
+    return next('/alumnas')
+  }
   next()
 }
 
@@ -22,7 +25,7 @@ const router = createRouter({
       component: () => import('../views/AppLayout.vue'),
       beforeEnter: requireAuth,
       children: [
-        { path: '',            redirect: '/dashboard' },
+        { path: '', redirect: () => localStorage.getItem('ritmica_rol') === 'recepcion' ? '/alumnas' : '/dashboard' },
         { path: 'dashboard',   name: 'dashboard',   component: () => import('../views/DashboardView.vue') },
         { path: 'alumnas',     name: 'alumnas',     component: () => import('../views/AlumnasView.vue') },
         { path: 'alumnas/:id', name: 'alumna',      component: () => import('../views/AlumnaDetalleView.vue') },

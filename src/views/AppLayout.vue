@@ -89,15 +89,15 @@ const iniciales = computed(() =>
 )
 
 const ALL_LINKS = [
-  { to: '/dashboard',   icon: '📊', label: 'Dashboard',    roles: ['admin','recepcion','lectura'] },
+  { to: '/dashboard',   icon: '📊', label: 'Dashboard',    roles: ['admin','lectura'] },
   { to: '/alumnas',     icon: '🩰', label: 'Alumnas',      roles: ['admin','recepcion','lectura','profesora'] },
   { to: '/pagos',       icon: '💳', label: 'Pagos',        roles: ['admin','recepcion','profesora'] },
   { to: '/caja',        icon: '🏧', label: 'Caja diaria',  roles: ['admin','recepcion'] },
   { to: '/actividades', icon: '🗓️', label: 'Actividades',  roles: ['admin','recepcion','lectura'] },
   { to: '/profesoras',  icon: '👩‍🏫', label: 'Profesoras',  roles: ['admin','recepcion','lectura'] },
-  { to: '/sedes',       icon: '📍', label: 'Sedes',        roles: ['admin'] },
-  { to: '/sueldos',     icon: '💰', label: 'Sueldos',      roles: ['admin'] },
-  { to: '/usuarios',    icon: '👤', label: 'Usuarios',     roles: ['admin'] },
+  { to: '/sedes',       icon: '📍', label: 'Sedes',        roles: ['admin','recepcion'] },
+  { to: '/sueldos',     icon: '💰', label: 'Sueldos',      roles: ['admin','recepcion'] },
+  { to: '/usuarios',    icon: '👤', label: 'Usuarios',     roles: ['admin','recepcion'] },
 ]
 
 const navLinks = computed(() => ALL_LINKS.filter(l => l.roles.includes(rol)))
