@@ -11,8 +11,9 @@
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <div
         v-for="p in profesoras" :key="p.id"
-        class="card p-5 flex flex-col gap-3"
+        class="card p-5 flex flex-col gap-3 cursor-pointer hover:shadow-md transition-shadow"
         :class="!p.activo ? 'opacity-50' : ''"
+        @click="$router.push(`/profesoras/${p.id}`)"
       >
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-full bg-ritmica-pink/10 flex items-center justify-center flex-shrink-0">
@@ -25,7 +26,7 @@
         </div>
         <div class="flex justify-between items-center pt-2 border-t border-gray-100">
           <span :class="p.activo ? 'badge-activa' : 'badge-baja'">{{ p.activo ? 'Activa' : 'Inactiva' }}</span>
-          <div class="flex gap-1">
+          <div class="flex gap-1" @click.stop>
             <button @click="abrirModal(p)" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-sm transition-colors">✏️</button>
             <button @click="toggleActivo(p)" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-sm transition-colors">{{ p.activo ? '🔒' : '🔓' }}</button>
           </div>
