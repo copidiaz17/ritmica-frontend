@@ -183,6 +183,15 @@
         </div>
         <p class="font-body text-sm text-gray-500 mb-4 font-semibold">{{ alumnaSeleccionada?.apellido }}, {{ alumnaSeleccionada?.nombre }}</p>
         <div class="space-y-4">
+          <!-- Cuota correspondiente a -->
+          <div v-if="opcionesActividadVencida.length">
+            <label class="block font-body text-xs text-gray-500 mb-1">Cuota correspondiente a</label>
+            <select v-model="formPago.actividad_id" class="input">
+              <option :value="null">— Sin especificar —</option>
+              <option v-for="op in opcionesActividadVencida" :key="op.id" :value="op.id">{{ op.nombre }}</option>
+            </select>
+          </div>
+
           <!-- Tipo -->
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Tipo de pago</label>
@@ -246,6 +255,19 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { exportarCuotasPDF } from '../utils/pdf.js'
 
+const danzaFusion = computed(() => actividades.value.find(a => /danza fusi/i.test(a.nombre)) || null)
+
+const opcionesActividadVencida = computed(() => {
+  const opciones = []
+  const acts = alumnaSeleccionada.value?.actividades || []
+  for (const act of acts) opciones.push({ id: act.id, nombre: act.nombre })
+  const df = danzaFusion.value
+  if (df && !opciones.find(o => o.id === df.id)) {
+    opciones.push({ id: df.id, nombre: df.nombre + ' — sábados' })
+  }
+  return opciones
+})
+
 const esProfe   = localStorage.getItem('ritmica_rol') === 'profesora'
 const exportando = ref(false)
 
@@ -287,7 +309,7 @@ const filtroActividad = ref('')
 const filtroProfe   = ref('')
 const anios = Array.from({ length: 5 }, (_, i) => hoy.getFullYear() - i)
 
-const formPago = ref({ tipo: 'cuota', mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10), observacion: '' })
+const formPago = ref({ tipo: 'cuota', mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10), observacion: '', actividad_id: null })
 
 const MESES_N = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 function nombreMes(m) { return MESES_N[m-1] }
@@ -355,7 +377,8 @@ async function eliminar(c) {
 function pagarDesdeVencida(a) {
   alumnaSeleccionada.value = a
   errorPago.value = ''
-  formPago.value = { tipo: 'cuota', mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10), observacion: '' }
+  const actividadDefault = a.actividades?.[0]?.id || null
+  formPago.value = { tipo: 'cuota', mes: hoy.getMonth()+1, anio: hoy.getFullYear(), monto: 0, medio_pago:'efectivo', fecha_pago: hoy.toISOString().slice(0,10), observacion: '', actividad_id: actividadDefault }
   modalPago.value = true
 }
 

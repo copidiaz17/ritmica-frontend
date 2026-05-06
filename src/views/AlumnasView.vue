@@ -310,6 +310,21 @@
             </div>
           </div>
 
+          <!-- Fecha de pago -->
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Fecha de pago</label>
+            <input v-model="formPago.fecha_pago" type="date" class="input" />
+          </div>
+
+          <!-- Cuota correspondiente a -->
+          <div v-if="opcionesActividad.length">
+            <label class="block font-body text-xs text-gray-500 mb-1">Cuota correspondiente a</label>
+            <select v-model="formPago.actividad_id" class="input">
+              <option :value="null">— Sin especificar —</option>
+              <option v-for="op in opcionesActividad" :key="op.id" :value="op.id">{{ op.nombre }}</option>
+            </select>
+          </div>
+
           <!-- Tipo -->
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Tipo de pago</label>
@@ -425,7 +440,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { exportarAlumnasPDF } from '../utils/pdf.js'
 
@@ -487,7 +502,7 @@ const formBase = () => ({
 })
 
 const form     = ref(formBase())
-const formPago = ref({ tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' })
+const formPago = ref({ tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '', actividad_id: null })
 
 function headers()    { return { Authorization: `Bearer ${localStorage.getItem('ritmica_token')}` } }
 function iniciales(a) { return `${a.nombre[0]}${a.apellido[0]}`.toUpperCase() }
@@ -585,6 +600,21 @@ const sugerenciasPago = computed(() => {
   ).slice(0, 8)
 })
 
+const danzaFusion = computed(() => catalogo.value.find(a => /danza fusi/i.test(a.nombre)) || null)
+
+const opcionesActividad = computed(() => {
+  const opciones = []
+  const acts = alumnaSeleccionada.value?.actividades || []
+  for (const act of acts) {
+    opciones.push({ id: act.id, nombre: act.nombre })
+  }
+  const df = danzaFusion.value
+  if (df && !opciones.find(o => o.id === df.id)) {
+    opciones.push({ id: df.id, nombre: df.nombre + ' — sábados' })
+  }
+  return opciones
+})
+
 function onComprobante(e) {
   const file = e.target.files[0]
   if (!file) return
@@ -596,6 +626,7 @@ function elegirAlumna(a) {
   alumnaSeleccionada.value = a
   busquedaPago.value = `${a.apellido}, ${a.nombre}`
   mostrarSugPago.value = false
+  formPago.value.actividad_id = a.actividades?.[0]?.id || null
 }
 
 function registrarPago(a) {
@@ -606,7 +637,8 @@ function registrarPago(a) {
   busquedaPago.value = ''
   comprobanteFile.value = null
   comprobantePreview.value = ''
-  formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' }
+  const actividadDefault = a.actividades?.[0]?.id || null
+  formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '', actividad_id: actividadDefault }
   modalPago.value = true
 }
 
@@ -618,7 +650,7 @@ function abrirModalPagoGeneral() {
   busquedaPago.value = ''
   comprobanteFile.value = null
   comprobantePreview.value = ''
-  formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' }
+  formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '', actividad_id: null }
   modalPago.value = true
 }
 
@@ -632,7 +664,6 @@ async function confirmarPago() {
     const { data: cuota } = await axios.post('/api/cuotas', {
       ...formPago.value,
       alumna_id: alumnaSeleccionada.value.id,
-      fecha_pago: hoy.toISOString().slice(0, 10),
     }, { headers: headers() })
 
     if (comprobanteFile.value) {
@@ -650,6 +681,7 @@ async function confirmarPago() {
     comprobanteFile.value = null
     comprobantePreview.value = ''
     formPago.value.observacion = ''
+    formPago.value.actividad_id = null
     setTimeout(() => { pagoExito.value = false }, 4000)
     await cargar()
   } catch (err) {
