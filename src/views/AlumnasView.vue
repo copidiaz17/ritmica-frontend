@@ -533,20 +533,23 @@ async function cargar() {
   try {
     const params = {}
     if (filtroActividad.value) params.actividad_id = filtroActividad.value
-    const [al, act, venc, df] = await Promise.all([
-      axios.get('/api/alumnas',                    { headers: headers(), params }),
-      axios.get('/api/actividades',                { headers: headers() }),
-      axios.get('/api/cuotas/vencidas',            { headers: headers() }),
-      axios.get('/api/actividades/danza-fusion',   { headers: headers() }),
+    const [al, act, venc] = await Promise.all([
+      axios.get('/api/alumnas',         { headers: headers(), params }),
+      axios.get('/api/actividades',     { headers: headers() }),
+      axios.get('/api/cuotas/vencidas', { headers: headers() }),
     ])
     alumnas.value       = al.data
     catalogo.value      = act.data
-    danzaFusion.value   = df.data
     const idsBaja = venc.data.alumnas.map(a => a.id)
     cuotasPagadas.value = alumnas.value.filter(a => !idsBaja.includes(a.id)).map(a => a.id)
   } finally {
     cargando.value = false
   }
+  // Carga separada para que un error aquí no rompa la lista de alumnas
+  try {
+    const { data } = await axios.get('/api/actividades/danza-fusion', { headers: headers() })
+    danzaFusion.value = data
+  } catch {}
 }
 
 function abrirModal(a = null) {
