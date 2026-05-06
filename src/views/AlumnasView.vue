@@ -7,9 +7,12 @@
         <h1 class="font-display text-3xl font-bold text-ritmica-dark">Alumnas</h1>
         <p class="font-body text-gray-500 mt-1">{{ alumnas.length }} {{ esProfe ? 'en tus grupos' : 'registradas' }}</p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <button @click="exportarPDF" :disabled="exportando" class="btn-secondary flex items-center gap-2 text-sm">
           <span>📄</span> {{ exportando ? 'Generando...' : 'Exportar PDF' }}
+        </button>
+        <button @click="abrirModalPagoGeneral" class="btn-secondary flex items-center gap-2 text-sm">
+          <span>💳</span> Registrar pago
         </button>
         <button @click="abrirModal()" class="btn-primary flex items-center gap-2">
           <span>+</span> Nueva alumna
@@ -244,25 +247,69 @@
       </div>
     </div>
 
-    <!-- ─── Modal pago rápido ──────────────────────────────────────────────── -->
+    <!-- ─── Modal pago ────────────────────────────────────────────────────── -->
     <div v-if="modalPago" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-2xl w-full max-w-sm p-6">
-        <div class="flex justify-between items-center mb-5">
-          <h2 class="font-display text-lg font-bold text-ritmica-dark">Registrar cuota</h2>
+      <div class="bg-white rounded-2xl w-full max-w-md flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
+          <h2 class="font-display text-lg font-bold text-ritmica-dark">Registrar pago</h2>
           <button @click="modalPago = false" class="text-gray-400 hover:text-gray-700 text-xl">✕</button>
         </div>
-        <p class="font-body text-sm text-gray-500 mb-4">{{ alumnaSeleccionada?.nombre }} {{ alumnaSeleccionada?.apellido }}</p>
 
-        <!-- Grupo de la alumna (info) -->
-        <div v-if="alumnaSeleccionada?.actividades?.length" class="flex flex-wrap gap-1 mb-4">
-          <span
-            v-for="act in alumnaSeleccionada.actividades"
-            :key="act.id"
-            class="text-xs bg-ritmica-pink/10 text-ritmica-pink px-2 py-0.5 rounded-full font-body"
-          >{{ act.nombre }}</span>
+        <!-- Mensaje éxito -->
+        <div v-if="pagoExito" class="mx-6 mt-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2 flex-shrink-0">
+          <span class="text-green-600 text-lg">✓</span>
+          <span class="font-body text-sm text-green-700 font-semibold">Pago registrado correctamente</span>
         </div>
 
-        <div class="space-y-4">
+        <!-- Cuerpo scrolleable -->
+        <div class="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+
+          <!-- Búsqueda o alumna fija -->
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Alumna *</label>
+            <div v-if="alumnaSeleccionada && !busquedaLibre" class="flex items-center justify-between px-3 py-2 bg-ritmica-pink/5 rounded-lg">
+              <div>
+                <span class="font-body text-sm font-semibold text-ritmica-pink">{{ alumnaSeleccionada.apellido }}, {{ alumnaSeleccionada.nombre }}</span>
+                <div class="flex flex-wrap gap-1 mt-0.5">
+                  <span v-for="act in alumnaSeleccionada.actividades" :key="act.id" class="text-xs bg-ritmica-pink/10 text-ritmica-pink px-2 py-0.5 rounded-full font-body">{{ act.nombre }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-else>
+              <input
+                v-model="busquedaPago"
+                type="text"
+                class="input"
+                placeholder="Buscar por nombre o apellido..."
+                @focus="mostrarSugPago = true"
+                autocomplete="off"
+              />
+              <div v-if="mostrarSugPago && sugerenciasPago.length" class="relative">
+                <ul class="absolute z-10 w-full bg-white border border-gray-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  <li
+                    v-for="a in sugerenciasPago" :key="a.id"
+                    @mousedown.prevent="elegirAlumna(a)"
+                    class="px-4 py-2.5 hover:bg-ritmica-pink/5 cursor-pointer flex items-center gap-3"
+                  >
+                    <div class="w-7 h-7 rounded-full bg-ritmica-rose flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <img v-if="a.foto" :src="a.foto" class="w-full h-full object-cover" />
+                      <span v-else class="text-ritmica-pink text-xs font-bold">{{ a.nombre[0] }}{{ a.apellido[0] }}</span>
+                    </div>
+                    <div>
+                      <p class="font-body text-sm text-gray-800">{{ a.apellido }}, {{ a.nombre }}</p>
+                      <p class="font-body text-xs text-gray-400">{{ a.actividades?.map(x=>x.nombre).join(', ') }}</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div v-if="alumnaSeleccionada" class="mt-2 flex items-center justify-between px-3 py-2 bg-ritmica-pink/5 rounded-lg">
+                <span class="font-body text-sm font-semibold text-ritmica-pink">{{ alumnaSeleccionada.apellido }}, {{ alumnaSeleccionada.nombre }}</span>
+                <button @click="alumnaSeleccionada = null; busquedaPago = ''" class="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Tipo -->
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Tipo de pago</label>
@@ -275,6 +322,8 @@
               </label>
             </div>
           </div>
+
+          <!-- Mes y Año -->
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-body text-xs text-gray-500 mb-1">Mes</label>
@@ -287,10 +336,14 @@
               <input v-model.number="formPago.anio" type="number" class="input" />
             </div>
           </div>
+
+          <!-- Monto -->
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Monto $</label>
             <input v-model.number="formPago.monto" type="number" min="0" step="100" class="input" />
           </div>
+
+          <!-- Medio de pago -->
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Medio de pago</label>
             <select v-model="formPago.medio_pago" class="input">
@@ -300,21 +353,42 @@
               <option value="mercadopago">MercadoPago</option>
             </select>
           </div>
-          <div>
-            <label class="block font-body text-xs text-gray-500 mb-1">Fecha de pago</label>
-            <input v-model="formPago.fecha_pago" type="date" class="input" />
-          </div>
+
+          <!-- Observación -->
           <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Observación</label>
             <input v-model="formPago.observacion" type="text" class="input" placeholder="Opcional..." />
           </div>
+
+          <!-- Comprobante -->
+          <div>
+            <label class="block font-body text-xs text-gray-500 mb-1">Comprobante (imagen)</label>
+            <div
+              class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-ritmica-pink/40 transition-colors"
+              @click="$refs.inputComp.click()"
+            >
+              <input ref="inputComp" type="file" accept="image/*" class="hidden" @change="onComprobante" />
+              <div v-if="comprobantePreview">
+                <img :src="comprobantePreview" class="max-h-28 mx-auto rounded-lg object-contain" />
+                <p class="font-body text-xs text-gray-400 mt-2">Toca para cambiar</p>
+              </div>
+              <div v-else class="py-1">
+                <p class="font-body text-sm text-gray-400">📎 Adjuntar comprobante</p>
+                <p class="font-body text-xs text-gray-300 mt-0.5">JPG, PNG hasta 10MB</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <p v-if="errorPago" class="text-red-500 text-sm font-body mt-3">{{ errorPago }}</p>
-        <div class="flex gap-3 mt-6">
-          <button @click="modalPago = false" class="btn-secondary flex-1">Cancelar</button>
-          <button @click="confirmarPago" :disabled="guardandoPago" class="btn-primary flex-1">
-            {{ guardandoPago ? 'Guardando...' : 'Confirmar' }}
-          </button>
+
+        <!-- Footer -->
+        <div class="px-6 pb-6 pt-4 border-t border-gray-100 flex-shrink-0">
+          <p v-if="errorPago" class="text-red-500 text-sm font-body mb-3">{{ errorPago }}</p>
+          <div class="flex gap-3">
+            <button @click="modalPago = false" class="btn-secondary flex-1">Cerrar</button>
+            <button @click="confirmarPago" :disabled="guardandoPago" class="btn-primary flex-1">
+              {{ guardandoPago ? 'Guardando...' : 'Registrar pago' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -372,7 +446,13 @@ const guardando      = ref(false)
 const guardandoPago  = ref(false)
 const errorModal     = ref('')
 const errorPago      = ref('')
+const pagoExito      = ref(false)
 const alumnaSeleccionada = ref(null)
+const busquedaLibre  = ref(false)   // true = modal abierto sin alumna fija (búsqueda libre)
+const busquedaPago   = ref('')
+const mostrarSugPago = ref(false)
+const comprobanteFile    = ref(null)
+const comprobantePreview = ref('')
 const exportando       = ref(false)
 const modalCambioGrupo = ref(false)
 const alumnaParaCambio = ref(null)
@@ -497,20 +577,80 @@ async function guardar() {
   }
 }
 
+const sugerenciasPago = computed(() => {
+  const q = busquedaPago.value.toLowerCase().trim()
+  if (!q) return []
+  return alumnas.value.filter(a =>
+    a.nombre.toLowerCase().includes(q) || a.apellido.toLowerCase().includes(q)
+  ).slice(0, 8)
+})
+
+function onComprobante(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  comprobanteFile.value = file
+  comprobantePreview.value = URL.createObjectURL(file)
+}
+
+function elegirAlumna(a) {
+  alumnaSeleccionada.value = a
+  busquedaPago.value = `${a.apellido}, ${a.nombre}`
+  mostrarSugPago.value = false
+}
+
 function registrarPago(a) {
   alumnaSeleccionada.value = a
+  busquedaLibre.value = false
   errorPago.value = ''
+  pagoExito.value = false
+  busquedaPago.value = ''
+  comprobanteFile.value = null
+  comprobantePreview.value = ''
+  formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' }
+  modalPago.value = true
+}
+
+function abrirModalPagoGeneral() {
+  alumnaSeleccionada.value = null
+  busquedaLibre.value = true
+  errorPago.value = ''
+  pagoExito.value = false
+  busquedaPago.value = ''
+  comprobanteFile.value = null
+  comprobantePreview.value = ''
   formPago.value = { tipo: 'cuota', mes: hoy.getMonth() + 1, anio: hoy.getFullYear(), monto: 0, medio_pago: 'efectivo', fecha_pago: hoy.toISOString().slice(0, 10), observacion: '' }
   modalPago.value = true
 }
 
 async function confirmarPago() {
   errorPago.value = ''
-  if (!formPago.value.monto) { errorPago.value = 'El monto es obligatorio'; return }
+  pagoExito.value = false
+  if (!alumnaSeleccionada.value) { errorPago.value = 'Seleccioná una alumna'; return }
+  if (!formPago.value.monto)     { errorPago.value = 'El monto es obligatorio'; return }
   guardandoPago.value = true
   try {
-    await axios.post('/api/cuotas', { ...formPago.value, alumna_id: alumnaSeleccionada.value.id }, { headers: headers() })
-    modalPago.value = false
+    const { data: cuota } = await axios.post('/api/cuotas', {
+      ...formPago.value,
+      alumna_id: alumnaSeleccionada.value.id,
+      fecha_pago: hoy.toISOString().slice(0, 10),
+    }, { headers: headers() })
+
+    if (comprobanteFile.value) {
+      const fd = new FormData()
+      fd.append('comprobante', comprobanteFile.value)
+      await axios.post(`/api/cuotas/${cuota.id}/comprobante`, fd, {
+        headers: { ...headers(), 'Content-Type': 'multipart/form-data' },
+      })
+    }
+
+    pagoExito.value = true
+    // Limpiar alumna y comprobante, mantener mes/año/monto
+    alumnaSeleccionada.value = null
+    busquedaPago.value = ''
+    comprobanteFile.value = null
+    comprobantePreview.value = ''
+    formPago.value.observacion = ''
+    setTimeout(() => { pagoExito.value = false }, 4000)
     await cargar()
   } catch (err) {
     errorPago.value = err.response?.data?.error || 'Error al guardar'
