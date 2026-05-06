@@ -30,7 +30,7 @@
         <option value="baja">Baja</option>
         <option value="suspendida">Suspendida</option>
       </select>
-      <select v-if="!esProfe" v-model="filtroActividad" class="input w-52">
+      <select v-if="!esProfe || catalogo.length > 1" v-model="filtroActividad" class="input w-52">
         <option value="">Todos los grupos</option>
         <option v-for="act in catalogo" :key="act.id" :value="act.id">{{ act.nombre }}</option>
       </select>
