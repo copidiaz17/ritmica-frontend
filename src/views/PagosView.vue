@@ -255,7 +255,7 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { exportarCuotasPDF } from '../utils/pdf.js'
 
-const danzaFusion = computed(() => actividades.value.find(a => /danza fusi/i.test(a.nombre)) || null)
+const danzaFusion = ref(null)
 
 const opcionesActividadVencida = computed(() => {
   const opciones = []
@@ -263,7 +263,7 @@ const opcionesActividadVencida = computed(() => {
   for (const act of acts) opciones.push({ id: act.id, nombre: act.nombre })
   const df = danzaFusion.value
   if (df && !opciones.find(o => o.id === df.id)) {
-    opciones.push({ id: df.id, nombre: df.nombre + ' — sábados' })
+    opciones.push({ id: df.id, nombre: 'Danza Fusión — sábados' })
   }
   return opciones
 })
@@ -397,10 +397,18 @@ async function confirmarPago() {
   }
 }
 
+async function cargarDanzaFusion() {
+  try {
+    const { data } = await axios.get('/api/actividades/danza-fusion', { headers: headers() })
+    danzaFusion.value = data
+  } catch {}
+}
+
 onMounted(() => {
   cargarCuotas()
   cargarVencidas()
   cargarActividades()
   cargarProfesoras()
+  cargarDanzaFusion()
 })
 </script>

@@ -533,13 +533,15 @@ async function cargar() {
   try {
     const params = {}
     if (filtroActividad.value) params.actividad_id = filtroActividad.value
-    const [al, act, venc] = await Promise.all([
-      axios.get('/api/alumnas',         { headers: headers(), params }),
-      axios.get('/api/actividades',     { headers: headers() }),
-      axios.get('/api/cuotas/vencidas', { headers: headers() }),
+    const [al, act, venc, df] = await Promise.all([
+      axios.get('/api/alumnas',                    { headers: headers(), params }),
+      axios.get('/api/actividades',                { headers: headers() }),
+      axios.get('/api/cuotas/vencidas',            { headers: headers() }),
+      axios.get('/api/actividades/danza-fusion',   { headers: headers() }),
     ])
-    alumnas.value  = al.data
-    catalogo.value = act.data
+    alumnas.value       = al.data
+    catalogo.value      = act.data
+    danzaFusion.value   = df.data
     const idsBaja = venc.data.alumnas.map(a => a.id)
     cuotasPagadas.value = alumnas.value.filter(a => !idsBaja.includes(a.id)).map(a => a.id)
   } finally {
@@ -600,17 +602,15 @@ const sugerenciasPago = computed(() => {
   ).slice(0, 8)
 })
 
-const danzaFusion = computed(() => catalogo.value.find(a => /danza fusi/i.test(a.nombre)) || null)
+const danzaFusion = ref(null)
 
 const opcionesActividad = computed(() => {
   const opciones = []
   const acts = alumnaSeleccionada.value?.actividades || []
-  for (const act of acts) {
-    opciones.push({ id: act.id, nombre: act.nombre })
-  }
+  for (const act of acts) opciones.push({ id: act.id, nombre: act.nombre })
   const df = danzaFusion.value
   if (df && !opciones.find(o => o.id === df.id)) {
-    opciones.push({ id: df.id, nombre: df.nombre + ' — sábados' })
+    opciones.push({ id: df.id, nombre: 'Danza Fusión — sábados' })
   }
   return opciones
 })
