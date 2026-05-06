@@ -184,7 +184,7 @@
         <p class="font-body text-sm text-gray-500 mb-4 font-semibold">{{ alumnaSeleccionada?.apellido }}, {{ alumnaSeleccionada?.nombre }}</p>
         <div class="space-y-4">
           <!-- Cuota correspondiente a -->
-          <div v-if="opcionesActividadVencida.length">
+          <div>
             <label class="block font-body text-xs text-gray-500 mb-1">Cuota correspondiente a</label>
             <select v-model="formPago.actividad_id" class="input">
               <option :value="null">— Sin especificar —</option>
