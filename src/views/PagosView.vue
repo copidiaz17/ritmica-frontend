@@ -263,7 +263,7 @@ const opcionesActividadVencida = computed(() => {
   for (const act of acts) opciones.push({ id: act.id, nombre: act.nombre })
   const df = danzaFusion.value
   if (df && !opciones.find(o => o.id === df.id)) {
-    opciones.push({ id: df.id, nombre: 'Danza Fusión — sábados' })
+    opciones.push({ id: df.id, nombre: 'Danza Fusión' })
   }
   return opciones
 })
