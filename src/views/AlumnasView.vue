@@ -549,7 +549,9 @@ async function cargar() {
   try {
     const { data } = await axios.get('/api/actividades/danza-fusion', { headers: headers() })
     danzaFusion.value = data
-  } catch {}
+  } catch (e) {
+    console.error('Danza Fusión no disponible:', e?.response?.data?.error || e.message)
+  }
 }
 
 function abrirModal(a = null) {
