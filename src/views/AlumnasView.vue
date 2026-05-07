@@ -545,10 +545,12 @@ async function cargar() {
   } finally {
     cargando.value = false
   }
-  // Carga separada para que un error aquí no rompa la lista de alumnas
+  // Garantiza que Danza Fusión exista en la DB; si no estaba en el catálogo, la agrega
   try {
     const { data } = await axios.get('/api/actividades/danza-fusion', { headers: headers() })
-    danzaFusion.value = data
+    if (data && !catalogo.value.find(a => a.id === data.id)) {
+      catalogo.value = [...catalogo.value, data]
+    }
   } catch (e) {
     console.error('Danza Fusión no disponible:', e?.response?.data?.error || e.message)
   }
@@ -607,7 +609,8 @@ const sugerenciasPago = computed(() => {
   ).slice(0, 8)
 })
 
-const danzaFusion = ref(null)
+// Busca Danza Fusión en el catálogo ya cargado (reactivo)
+const danzaFusion = computed(() => catalogo.value.find(a => /danza fusi/i.test(a.nombre)) || null)
 
 const opcionesActividad = computed(() => {
   const opciones = []

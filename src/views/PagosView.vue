@@ -255,7 +255,7 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { exportarCuotasPDF } from '../utils/pdf.js'
 
-const danzaFusion = ref(null)
+const danzaFusion = computed(() => actividades.value.find(a => /danza fusi/i.test(a.nombre)) || null)
 
 const opcionesActividadVencida = computed(() => {
   const opciones = []
@@ -400,7 +400,9 @@ async function confirmarPago() {
 async function cargarDanzaFusion() {
   try {
     const { data } = await axios.get('/api/actividades/danza-fusion', { headers: headers() })
-    danzaFusion.value = data
+    if (data && !actividades.value.find(a => a.id === data.id)) {
+      actividades.value = [...actividades.value, data]
+    }
   } catch (e) {
     console.error('Danza Fusión no disponible:', e?.response?.data?.error || e.message)
   }
