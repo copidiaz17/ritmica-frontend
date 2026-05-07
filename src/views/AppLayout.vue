@@ -93,7 +93,7 @@ const ALL_LINKS = [
   { to: '/alumnas',     icon: '🩰', label: 'Alumnas',      roles: ['admin','recepcion','lectura','profesora'] },
   { to: '/pagos',       icon: '💳', label: 'Pagos',        roles: ['admin','recepcion','profesora'] },
   { to: '/caja',        icon: '🏧', label: 'Caja diaria',  roles: ['admin','recepcion'] },
-  { to: '/actividades', icon: '🗓️', label: 'Actividades',  roles: ['admin','recepcion','lectura'] },
+  { to: '/grupos',      icon: '🗂️', label: 'Grupos',       roles: ['admin','recepcion','lectura'] },
   { to: '/profesoras',  icon: '👩‍🏫', label: 'Profesoras',  roles: ['admin','recepcion','lectura'] },
   { to: '/sedes',       icon: '📍', label: 'Sedes',        roles: ['admin','recepcion'] },
   { to: '/sueldos',     icon: '💰', label: 'Sueldos',      roles: ['admin','recepcion'] },
